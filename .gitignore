@@ -1,4 +1,8 @@
-__pycache__/  
-.env  
-*.db-wal  
-*.db-shm 
+__pycache__/
+*.py[cod]
+.env
+.venv/
+venv/
+.pytest_cache/
+*.db-wal
+*.db-shm
