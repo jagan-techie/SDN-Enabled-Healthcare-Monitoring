@@ -1,0 +1,355 @@
+{% extends "base.html" %}
+<!-- dashboard/templates/index.html - Clinical Telemetry & Patient Monitoring Workstation View -->
+{% block title %}CardioSDN Guard — Clinical Telemetry & Patient Monitoring Workstation{% endblock %}
+{% block page_id %}live{% endblock %}
+
+{% block context_banner %}
+<!-- BEGIN: PatientBannerStrip -->
+<section class="bg-clinical-900 border-b border-clinical-border px-4 lg:px-6 py-2.5" data-purpose="patient-context-banner" style="background: rgb(9, 14, 24); border-bottom: 1px solid rgba(56, 189, 248, 0.12);">
+    <div class="max-w-[1920px] mx-auto flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+        <!-- Patient Selector & Primary Tag -->
+        <div class="flex flex-wrap items-center gap-3">
+            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider" for="patient-select">Monitored Patient:</label>
+            <div class="relative min-w-[320px]">
+                <select id="patient-select" class="w-full bg-clinical-950 border border-clinical-border focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 text-slate-100 text-sm font-semibold rounded-lg pl-3 pr-8 py-1.5 appearance-none cursor-pointer">
+                    {% for p in patients %}
+                    <option value="{{ p.patient_id }}" {% if loop.first %}selected{% endif %}>
+                        {{ p.patient_id }} — {{ p.name }} ({{ p.room }})
+                    </option>
+                    {% endfor %}
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                </div>
+            </div>
+            <span id="patientMRN" class="px-2 py-0.5 rounded text-[11px] font-mono bg-blue-950 text-blue-300 border border-blue-800">
+                MRN: {{ patients[0].mrn if patients else '884-9021' }}
+            </span>
+        </div>
+
+        <!-- Clinical Demographics & Safety Chips -->
+        <div class="flex flex-wrap items-center gap-2 lg:gap-3 text-xs text-slate-300">
+            <div class="bg-clinical-950 px-2.5 py-1 rounded border border-clinical-border flex items-center gap-1.5">
+                <span class="text-slate-400">Demographics:</span>
+                <span id="patientDemo" class="font-medium text-slate-200">
+                    {{ patients[0].age if patients else 42 }}y • {{ patients[0].gender if patients else 'F' }}
+                </span>
+            </div>
+            <div class="bg-clinical-950 px-2.5 py-1 rounded border border-clinical-border flex items-center gap-1.5">
+                <span class="text-slate-400">Admitted:</span>
+                <span id="patientAdmission" class="font-medium text-slate-200">
+                    {{ patients[0].admission if patients else '2d ago (Post-PTCA)' }}
+                </span>
+            </div>
+            <div class="bg-amber-950/40 px-2.5 py-1 rounded border border-amber-600/40 text-amber-200 flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                <span id="patientAllergy">Allergy: <strong class="underline decoration-amber-500">{{ patients[0].allergy if patients else 'Penicillin' }}</strong></span>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- END: PatientBannerStrip -->
+{% endblock %}
+
+{% block content %}
+<!-- Dynamic Priority Flow Alert Banner -->
+<div id="priorityBanner" class="priority-banner-glowing rounded-xl p-3 px-4 flex items-center justify-between" style="display: none;">
+    <div class="flex items-center space-x-3">
+        <span class="text-2xl animate-bounce">⚡</span>
+        <div>
+            <div class="text-sm font-bold text-white flex items-center gap-2">
+                <span>SDN DYNAMIC PRIORITY FLOW INSTALLED (QUEUE 1 ACTIVE)</span>
+                <span class="text-xs px-2 py-0.5 rounded font-mono bg-purple-900/80 text-purple-200 border border-purple-500/50">OPENFLOW 1.3</span>
+            </div>
+            <div id="priorityReason" class="text-xs text-purple-200 mt-0.5">
+                Emergency QoS rerouting triggered: Traffic steered to guaranteed 6-10 Mbps Linux HTB Queue.
+            </div>
+        </div>
+    </div>
+    <span class="px-3 py-1 rounded-full text-xs font-mono font-bold bg-white text-purple-900 shadow">
+        PRIORITY LEVEL 32768
+    </span>
+</div>
+
+<!-- Top Grid: High-Priority Vital Signs Telemetry Cards -->
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3.5" data-purpose="vital-signs-metrics">
+    <!-- Metric 1: Heart Rate -->
+    <article class="clinical-panel p-4 rounded-xl relative overflow-hidden group hover:border-cyan-500/40 transition">
+        <div class="flex items-center justify-between text-slate-400 mb-1">
+            <span class="text-xs font-semibold uppercase tracking-wider">Heart Rate</span>
+            <svg class="w-4 h-4 text-rose-500 animate-heart-pulse fill-rose-500/30" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+        </div>
+        <div class="flex items-baseline space-x-2">
+            <span id="val-hr" class="text-4xl lg:text-5xl font-mono font-extrabold text-white tracking-tight">76</span>
+            <span class="text-sm font-medium text-slate-400">bpm</span>
+        </div>
+        <div class="mt-3 flex items-center justify-between text-[11px] pt-2 border-t border-clinical-border">
+            <span id="lbl-hr-range" class="text-emerald-400 font-medium">Normal Range: 60 - 100</span>
+            <svg id="svg-hr-pulse" class="w-16 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 60 16">
+                <path d="M0 8h15l3-6 4 14 3-8h10l2-4 3 8 2-4h18" stroke-linecap="round" stroke-width="1.6"></path>
+            </svg>
+        </div>
+    </article>
+
+    <!-- Metric 2: SpO2 Blood Oxygen -->
+    <article class="clinical-panel p-4 rounded-xl relative overflow-hidden group hover:border-cyan-500/40 transition">
+        <div class="flex items-center justify-between text-slate-400 mb-1">
+            <span class="text-xs font-semibold uppercase tracking-wider">SpO2 Blood Oxygen</span>
+            <span class="text-sm" title="Lungs / Plethysmograph">🫁</span>
+        </div>
+        <div class="flex items-baseline space-x-2">
+            <span id="val-spo2" class="text-4xl lg:text-5xl font-mono font-extrabold text-cyan-400 tracking-tight">98.1</span>
+            <span class="text-sm font-medium text-slate-400">%</span>
+        </div>
+        <div class="mt-3 flex items-center justify-between text-[11px] pt-2 border-t border-clinical-border">
+            <span class="text-cyan-400 font-medium">Safe Range: &ge; 95%</span>
+            <div class="w-16 h-2 bg-clinical-950 rounded-full overflow-hidden border border-cyan-900/60 flex">
+                <div id="bar-spo2-mini" class="bg-cyan-400 h-full w-[98%] transition-all duration-500"></div>
+            </div>
+        </div>
+    </article>
+
+    <!-- Metric 3: Body Temperature -->
+    <article class="clinical-panel p-4 rounded-xl relative overflow-hidden group hover:border-cyan-500/40 transition">
+        <div class="flex items-center justify-between text-slate-400 mb-1">
+            <span class="text-xs font-semibold uppercase tracking-wider">Body Temperature</span>
+            <span class="text-sm" title="Thermometer">🌡️</span>
+        </div>
+        <div class="flex items-baseline space-x-2">
+            <span id="val-temp" class="text-4xl lg:text-5xl font-mono font-extrabold text-white tracking-tight">37.0</span>
+            <span class="text-sm font-medium text-slate-400">°C</span>
+            <span id="val-temp-f" class="text-xs font-mono text-slate-500 ml-1">(98.6°F)</span>
+        </div>
+        <div class="mt-3 flex items-center justify-between text-[11px] pt-2 border-t border-clinical-border">
+            <span class="text-emerald-400 font-medium">Afebrile: 36.5 - 37.5 °C</span>
+            <span class="text-[10px] font-mono text-slate-400">Axillary Probe</span>
+        </div>
+    </article>
+
+    <!-- Metric 4: Non-Invasive Blood Pressure -->
+    <article class="clinical-panel p-4 rounded-xl relative overflow-hidden group hover:border-cyan-500/40 transition">
+        <div class="flex items-center justify-between text-slate-400 mb-1">
+            <span class="text-xs font-semibold uppercase tracking-wider">Blood Pressure (NIBP)</span>
+            <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-emerald-950 text-emerald-400 border border-emerald-800">Auto 15m</span>
+        </div>
+        <div class="flex items-baseline space-x-1.5">
+            <span id="val-bp" class="text-3xl lg:text-4xl font-mono font-extrabold text-white tracking-tight">118/74</span>
+            <span class="text-xs font-medium text-slate-400">mmHg</span>
+        </div>
+        <div class="mt-3 flex items-center justify-between text-[11px] pt-2 border-t border-clinical-border">
+            <span class="text-slate-300 font-mono">MAP: <strong id="val-map" class="text-white">88</strong> mmHg</span>
+            <span class="text-emerald-400 font-medium">Optimal</span>
+        </div>
+    </article>
+
+    <!-- Metric 5: Respiration Rate -->
+    <article class="clinical-panel p-4 rounded-xl relative overflow-hidden group hover:border-cyan-500/40 transition">
+        <div class="flex items-center justify-between text-slate-400 mb-1">
+            <span class="text-xs font-semibold uppercase tracking-wider">Respiration Rate</span>
+            <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+            </svg>
+        </div>
+        <div class="flex items-baseline space-x-2">
+            <span id="val-resp" class="text-4xl lg:text-5xl font-mono font-extrabold text-white tracking-tight">16</span>
+            <span class="text-sm font-medium text-slate-400">rpm</span>
+        </div>
+        <div class="mt-3 flex items-center justify-between text-[11px] pt-2 border-t border-clinical-border">
+            <span class="text-emerald-400 font-medium">Safe: 12 - 20 rpm</span>
+            <span class="text-[10px] font-mono text-slate-400">Thoracic Imp.</span>
+        </div>
+    </article>
+
+    <!-- Metric 6: ML Latency & Edge Inference Status -->
+    <article class="clinical-panel-highlight p-4 rounded-xl relative overflow-hidden group">
+        <div class="flex items-center justify-between text-slate-300 mb-1">
+            <span class="text-xs font-semibold uppercase tracking-wider">ML Edge Latency</span>
+            <span class="text-amber-400 text-sm">⚡</span>
+        </div>
+        <div class="flex items-baseline space-x-2">
+            <span id="val-latency" class="text-4xl lg:text-5xl font-mono font-extrabold text-amber-300 tracking-tight">8.3</span>
+            <span class="text-sm font-medium text-slate-300">ms</span>
+        </div>
+        <div class="mt-3 flex items-center justify-between text-[11px] pt-2 border-t border-emerald-500/20">
+            <span class="text-emerald-300 font-mono truncate">Sliding Window + RF</span>
+            <span class="text-[10px] px-1 bg-emerald-950 text-emerald-400 rounded">0% Drop</span>
+        </div>
+    </article>
+</section>
+
+<!-- Center Section: ECG Telemetry Oscilloscope Viewport & Diagnostic Controls -->
+<section class="clinical-panel rounded-2xl overflow-hidden border border-clinical-border" data-purpose="telemetry-oscilloscope-section">
+    <!-- Scope Bar Controls -->
+    <div class="px-4 py-3 bg-clinical-900 border-b border-clinical-border flex flex-wrap items-center justify-between gap-3">
+        <!-- Stream Label & Pulse -->
+        <div class="flex items-center space-x-3">
+            <div class="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-slate-200">
+                <span id="scopeStreamPulse" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Real-Time Lead-II ECG Waveform (360 Hz Telemetry Stream)</span>
+            </div>
+            <span id="scopeStreamBadge" class="text-xs font-mono px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-600/40">
+                • LIVE STREAMING
+            </span>
+        </div>
+        <!-- Scope Calibration & Controls -->
+        <div class="flex flex-wrap items-center gap-2 text-xs">
+            <div class="flex items-center px-2.5 py-1 rounded-lg bg-cyan-950/60 border border-cyan-700/50 text-cyan-300 font-mono font-semibold">
+                Lead II • 360 Hz Stream
+            </div>
+            <div class="flex items-center space-x-1.5 px-2.5 py-1 bg-clinical-950 rounded-lg border border-clinical-border text-slate-300 font-mono text-[11px]">
+                <span>Gain:</span>
+                <span class="text-cyan-400 font-bold">10 mm/mV</span>
+            </div>
+            <div class="flex items-center space-x-1.5 px-2.5 py-1 bg-clinical-950 rounded-lg border border-clinical-border text-slate-300 font-mono text-[11px]">
+                <span>Speed:</span>
+                <span class="text-cyan-400 font-bold">25 mm/s</span>
+            </div>
+            <!-- Utility Actions -->
+            <div class="flex items-center pl-1">
+                <button id="freeze-btn" class="px-2.5 py-1 bg-clinical-850 hover:bg-clinical-800 text-slate-200 rounded-lg border border-clinical-border transition flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                    Freeze
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Canvas Monitor Display with Millimeter Grid -->
+    <div id="ecg-container" class="relative w-full h-80 lg:h-96 medical-grid-dark overflow-hidden cursor-crosshair" data-purpose="oscilloscope-viewport">
+        <!-- Live Sweep Canvas Rendering Waveforms -->
+        <canvas id="ecgCanvas" class="w-full h-full block glow-ecg"></canvas>
+
+        <!-- Oscilloscope Overlay Badges -->
+        <div class="absolute top-3 left-4 flex flex-col space-y-1 pointer-events-none">
+            <div class="flex items-center space-x-2">
+                <span class="text-xs font-mono font-bold text-emerald-400 bg-clinical-950/80 px-2 py-0.5 rounded border border-emerald-500/30">
+                    LEAD II • 1.0mV CAL
+                </span>
+                <span class="text-xs font-mono text-cyan-300 bg-clinical-950/80 px-2 py-0.5 rounded border border-cyan-500/30">
+                    QRS Dur: 84ms • QT/QTc: 388/412ms
+                </span>
+            </div>
+        </div>
+
+        <!-- R-Peak Detection / Automated AI Diagnostic Chip -->
+        <div class="absolute top-3 right-4 pointer-events-none">
+            <div id="aiClassificationBadge" class="bg-clinical-950/90 border border-emerald-500/40 px-3 py-1.5 rounded-lg shadow-lg flex items-center space-x-2">
+                <span id="aiClassificationDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                <span id="aiClassificationText" class="text-xs font-mono font-semibold text-emerald-300">
+                    AI Classification: Normal Sinus Rhythm (NSR) • 99.4% Conf.
+                </span>
+            </div>
+        </div>
+
+        <!-- Sweep Speed Calibration Notch (Left Edge) -->
+        <div class="absolute left-2 bottom-8 h-14 w-3 border-l-2 border-t-2 border-b-2 border-emerald-400/70 pointer-events-none flex items-center">
+            <span class="text-[9px] font-mono text-emerald-400 -rotate-90 -ml-5">1.0mV</span>
+        </div>
+
+        <!-- Lower Grid Calibration Bar -->
+        <div class="absolute bottom-2 left-4 right-4 flex items-center justify-between text-[11px] font-mono text-slate-400 bg-clinical-950/70 px-3 py-1 rounded backdrop-blur border border-clinical-border pointer-events-none">
+            <span>Grid: 200 ms / 0.5 mV (Big Box: 5mm x 5mm)</span>
+            <span class="text-emerald-400">AAMI Beat Grouping: Normal / Ventricular Ectopic / Noise Filtered (Notch 50/60Hz ON)</span>
+        </div>
+    </div>
+</section>
+
+<!-- Bottom Split Panel: SDN Network Fabric & Intelligent Edge Analytics -->
+<section class="grid grid-cols-1 lg:grid-cols-3 gap-4" data-purpose="sdn-edge-telemetry-status">
+    <!-- SDN Traffic Engineering & QoS Card -->
+    <article class="clinical-panel p-4 rounded-xl border border-clinical-border">
+        <div class="flex items-center justify-between pb-2.5 mb-3 border-b border-clinical-border">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                SDN Network Flow Status
+            </h3>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800">OPENFLOW 1.3</span>
+        </div>
+        <div class="grid grid-cols-2 gap-3 text-xs font-mono">
+            <div class="bg-clinical-950 p-2.5 rounded-lg border border-clinical-border">
+                <span class="text-slate-400 block text-[10px]">DYNAMIC PRIORITY</span>
+                <span id="sdnQueueText" class="font-bold text-emerald-400">Queue 0 (Best-Effort)</span>
+            </div>
+            <div class="bg-clinical-950 p-2.5 rounded-lg border border-clinical-border">
+                <span class="text-slate-400 block text-[10px]">PACKET LOSS RATE</span>
+                <span id="sdnLossText" class="font-bold text-slate-100">0.0002 %</span>
+            </div>
+            <div class="bg-clinical-950 p-2.5 rounded-lg border border-clinical-border">
+                <span class="text-slate-400 block text-[10px]">NETWORK JITTER</span>
+                <span id="sdnJitterText" class="font-bold text-cyan-400">1.18 ms</span>
+            </div>
+            <div class="bg-clinical-950 p-2.5 rounded-lg border border-clinical-border">
+                <span class="text-slate-400 block text-[10px]">COMMITTED BANDWIDTH</span>
+                <span id="sdnBandwidthText" class="font-bold text-slate-100">100 Mbps (Guaranteed)</span>
+            </div>
+        </div>
+    </article>
+
+    <!-- AI Inference & Arrhythmia Edge Classifier -->
+    <article class="clinical-panel p-4 rounded-xl border border-clinical-border">
+        <div class="flex items-center justify-between pb-2.5 mb-3 border-b border-clinical-border">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                Edge AI Beat Classifier
+            </h3>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-800">Random Forest + Rules</span>
+        </div>
+        <div class="space-y-2 text-xs">
+            <div>
+                <div class="flex justify-between font-mono text-[11px] mb-1">
+                    <span class="text-slate-300">Normal Sinus Rhythm (NSR)</span>
+                    <span id="bar-nsr-text" class="text-emerald-400 font-bold">99.4%</span>
+                </div>
+                <div class="w-full bg-clinical-950 rounded-full h-1.5 overflow-hidden">
+                    <div id="bar-nsr" class="bg-emerald-400 h-1.5 rounded-full transition-all duration-500" style="width: 99.4%"></div>
+                </div>
+            </div>
+            <div>
+                <div class="flex justify-between font-mono text-[11px] mb-1">
+                    <span class="text-slate-400">Premature Ventricular Contraction (PVC)</span>
+                    <span id="bar-pvc-text" class="text-slate-400 font-bold">0.4%</span>
+                </div>
+                <div class="w-full bg-clinical-950 rounded-full h-1.5 overflow-hidden">
+                    <div id="bar-pvc" class="bg-amber-400 h-1.5 rounded-full transition-all duration-500" style="width: 0.4%"></div>
+                </div>
+            </div>
+            <div>
+                <div class="flex justify-between font-mono text-[11px] mb-1">
+                    <span class="text-slate-400">Artifact / Motion Noise</span>
+                    <span id="bar-art-text" class="text-slate-400 font-bold">0.2%</span>
+                </div>
+                <div class="w-full bg-clinical-950 rounded-full h-1.5 overflow-hidden">
+                    <div id="bar-art" class="bg-slate-500 h-1.5 rounded-full transition-all duration-500" style="width: 0.2%"></div>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    <!-- Active Clinical Thresholds & Alarm Summary -->
+    <article class="clinical-panel p-4 rounded-xl border border-clinical-border">
+        <div class="flex items-center justify-between pb-2.5 mb-3 border-b border-clinical-border">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                Active Alarm Triggers
+            </h3>
+            <span id="alarmStatusTag" class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800">ALL PASS</span>
+        </div>
+        <ul class="text-xs font-mono space-y-2">
+            <li class="flex items-center justify-between p-1.5 rounded bg-clinical-950 border border-clinical-border">
+                <span class="text-slate-300">Tachycardia Threshold</span>
+                <span id="alarmTachyText" class="text-slate-400">&gt; 120 bpm (Safe)</span>
+            </li>
+            <li class="flex items-center justify-between p-1.5 rounded bg-clinical-950 border border-clinical-border">
+                <span class="text-slate-300">Bradycardia Threshold</span>
+                <span id="alarmBradyText" class="text-slate-400">&lt; 50 bpm (Safe)</span>
+            </li>
+            <li class="flex items-center justify-between p-1.5 rounded bg-clinical-950 border border-clinical-border">
+                <span class="text-slate-300">SpO2 Desaturation Alert</span>
+                <span id="alarmSpo2Text" class="text-slate-400">&lt; 90 % (Safe)</span>
+            </li>
+        </ul>
+    </article>
+</section>
+{% endblock %}

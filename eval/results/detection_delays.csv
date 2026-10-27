@@ -1,0 +1,4 @@
+patient_id,anomaly_type,ground_truth_start_s,alert_detected_s,detection_delay_s,sdn_flow_setup_ms,total_closed_loop_s
+P101,TACHYCARDIA_FEVER,15.0,16.0,1.0,3.13,1.003
+P102,HYPOXEMIA,20.0,21.0,1.0,3.93,1.004
+P103,ARRHYTHMIA_PVC,12.0,13.0,1.0,4.75,1.005

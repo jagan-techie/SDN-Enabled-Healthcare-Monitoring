@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<!-- dashboard/templates/base.html - Clinical Telemetry & Patient Monitoring Workstation Master Layout -->
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{% block title %}CardioSDN Guard — Clinical Telemetry & Patient Monitoring Workstation{% endblock %}</title>
+
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS v3 with Forms and Container Queries -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              clinical: {
+                950: '#060B17',
+                900: '#0B132B',
+                850: '#0F1A36',
+                800: '#142247',
+                750: '#1A2C5B',
+                700: '#1E356D',
+                border: 'rgba(56, 189, 248, 0.12)',
+                borderActive: 'rgba(56, 189, 248, 0.4)'
+              },
+              telemetry: {
+                obsidian: '#050914',
+                surface: '#0b1326',
+                low: '#101a33',
+                card: '#131f3d',
+                border: '#1f2e52',
+                cyan: '#06b6d4',
+                neonCyan: '#22d3ee',
+                critical: '#f43f5e',
+                criticalGlow: 'rgba(244, 63, 94, 0.22)',
+                warning: '#f59e0b',
+                stable: '#10b981',
+                ecgGreen: '#00ff88',
+              },
+              ecg: {
+                green: '#10B981',
+                glow: '#34D399',
+                amber: '#F59E0B',
+                cyan: '#06B6D4',
+                red: '#EF4444'
+              }
+            },
+            fontFamily: {
+              sans: ['"Space Grotesk"', 'Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+              mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace']
+            },
+            animation: {
+              'pulse-fast': 'pulse 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'radar-sweep': 'sweep 3s linear infinite',
+            },
+            keyframes: {
+              sweep: {
+                '0%': { transform: 'translateX(-100%)' },
+                '100%': { transform: 'translateX(200%)' },
+              }
+            }
+          }
+        }
+      }
+    </script>
+
+    <!-- Locally vendored Chart.js -->
+    <script src="{{ url_for('static', filename='js/chart.umd.min.js') }}"></script>
+    <!-- Custom Clinical Theme Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="bg-clinical-950 text-slate-100 font-sans min-h-screen antialiased flex flex-col selection:bg-emerald-500 selection:text-black" data-page="{% block page_id %}base{% endblock %}" style="background-color: rgb(7, 11, 18);">
+
+    <!-- BEGIN: MainHeader -->
+    <header class="border-b border-clinical-border bg-clinical-900/90 backdrop-blur sticky top-0 z-50 px-4 lg:px-6 py-2.5" style="background: linear-gradient(rgba(10, 16, 28, 0.96) 0%, rgba(7, 12, 22, 0.94) 100%); border-bottom: 1px solid rgba(56, 189, 248, 0.15);">
+        <div class="max-w-[1920px] mx-auto flex flex-wrap items-center justify-between gap-3">
+            <!-- Brand & SDN Node Identifier -->
+            <div class="flex items-center space-x-3.5" data-purpose="workstation-brand">
+                <a href="{{ url_for('live_monitor') }}" class="flex items-center space-x-3.5 group text-decoration-none">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-600 via-blue-600 to-emerald-500 p-0.5 shadow-lg shadow-cyan-500/20 flex items-center justify-center">
+                        <div class="w-full h-full bg-clinical-950 rounded-[10px] flex items-center justify-center">
+                            <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                                <path class="animate-pulse" d="M7 12h2.5l1.5-3 2 6 1.5-3H17"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <span class="font-bold text-lg tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">CardioSDN</span>
+                            <span class="text-xs px-1.5 py-0.5 rounded font-mono font-medium bg-cyan-950 text-cyan-400 border border-cyan-800/60">GUARD v4.2</span>
+                        </div>
+                        <div class="flex items-center space-x-2 text-[11px] text-slate-400">
+                            <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <span>SDN Gateway Connected • OpenFlow 1.3</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            {% if current_user %}
+            <!-- Navigation Tabs -->
+            <nav class="hidden md:flex items-center space-x-1 bg-clinical-950/70 p-1 rounded-xl border border-clinical-border" data-purpose="primary-navigation">
+                <a class="px-3.5 py-1.5 text-xs font-semibold rounded-lg {% if active_page == 'live' %}bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 shadow-sm{% else %}text-slate-300 hover:text-white hover:bg-clinical-850{% endif %} flex items-center gap-1.5 transition" href="{{ url_for('live_monitor') }}">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 status-ping"></span>
+                    Live Monitor
+                </a>
+                <a class="px-3.5 py-1.5 text-xs font-medium rounded-lg {% if active_page == 'alerts' %}bg-amber-500/15 text-amber-300 border border-amber-500/30{% else %}text-slate-300 hover:text-white hover:bg-clinical-850{% endif %} flex items-center gap-1.5 transition" href="{{ url_for('alerts_page') }}">
+                    Alerts
+                    <span id="navAlertBadge" class="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">!</span>
+                </a>
+                <a class="px-3.5 py-1.5 text-xs font-medium rounded-lg {% if active_page == 'history' %}bg-cyan-500/15 text-cyan-300 border border-cyan-500/30{% else %}text-slate-300 hover:text-white hover:bg-clinical-850{% endif %} transition" href="{{ url_for('history_page') }}">
+                    History
+                </a>
+                <a class="px-3.5 py-1.5 text-xs font-medium rounded-lg {% if active_page == 'network' %}bg-purple-500/15 text-purple-300 border border-purple-500/30{% else %}text-slate-300 hover:text-white hover:bg-clinical-850{% endif %} transition" href="{{ url_for('network_page') }}">
+                    SDN Network
+                </a>
+            </nav>
+
+            <!-- Quick Actions, Global Condition & Doctor Profile -->
+            <div class="flex items-center space-x-3" data-purpose="quick-actions-bar">
+                <!-- Global Patient Status Indicator Pill -->
+                <div id="globalStatusPill" class="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-emerald-950/50 border border-emerald-500/40 text-emerald-400 text-xs font-semibold tracking-wider">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 status-ping"></span>
+                    <span id="globalStatusText">STABLE / NORMAL</span>
+                </div>
+
+                <!-- Alarm Mute Toggle Button -->
+                <button id="alarmAudioBtn" aria-label="Toggle Alarm Audio" class="p-2 rounded-lg bg-clinical-850 border border-clinical-border hover:border-amber-500/50 text-slate-300 hover:text-amber-400 transition" title="Audio Alarms Active (Click to silence)" type="button">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                    </svg>
+                </button>
+
+                <!-- Clinician Profile -->
+                <div class="flex items-center space-x-2 pl-2 border-l border-clinical-border">
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-600 to-blue-500 flex items-center justify-center text-xs font-bold text-white shadow-sm ring-1 ring-white/20">
+                        {{ current_user[:2].upper() if current_user else 'MC' }}
+                    </div>
+                    <div class="hidden xl:block text-left text-xs leading-tight">
+                        <p class="font-medium text-slate-200">Dr. {{ current_user.capitalize() if current_user else 'M. Chen' }}</p>
+                        <p class="text-[10px] text-slate-400">Attending Cardiologist</p>
+                    </div>
+                </div>
+
+                <!-- Logout Action -->
+                <a href="{{ url_for('logout') }}" class="text-xs px-2.5 py-1.5 rounded-lg border border-rose-500/20 bg-rose-950/20 text-rose-300 hover:bg-rose-900/30 transition">
+                    Logout
+                </a>
+            </div>
+            {% else %}
+            <div>
+                <a href="{{ url_for('login') }}" class="text-xs font-semibold px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white transition">
+                    Sign In
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </header>
+    <!-- END: MainHeader -->
+
+    {% block context_banner %}{% endblock %}
+
+    <!-- Main Workspace Content -->
+    <main class="flex-1 max-w-[1920px] w-full mx-auto p-4 lg:p-6 space-y-5">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- BEGIN: WorkstationFooter -->
+    <footer class="border-t border-clinical-border bg-clinical-950 px-4 py-3 mt-auto" data-purpose="system-notice-footer" style="background: rgb(6, 9, 16); border-top: 1px solid rgba(56, 189, 248, 0.12);">
+        <div class="max-w-[1920px] mx-auto flex flex-col md:flex-row items-center justify-between gap-2 text-center md:text-left">
+            <div class="text-xs text-slate-400">
+                <p>Intelligent Healthcare Monitoring using Software-Defined Networking, IoT, and Machine Learning</p>
+                <p class="text-[11px] text-amber-500 font-medium mt-0.5">
+                    Notice: Research & Academic Demonstration Platform. Not a Certified Medical Device for Diagnostic Treatment.
+                </p>
+            </div>
+            <div class="text-[11px] font-mono text-slate-500 flex items-center space-x-3">
+                <span>Sampling: 360 Hz</span>
+                <span>•</span>
+                <span>Controller: Ryu OpenFlow 1.3</span>
+                <span>•</span>
+                <span>Session: #SDN-ICU-88219</span>
+            </div>
+        </div>
+    </footer>
+    <!-- END: WorkstationFooter -->
+
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>

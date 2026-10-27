@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+<!-- dashboard/templates/alerts.html - Clinical Telemetry Alert Triage Workstation -->
+{% block title %}CardioSDN Guard — Clinical Telemetry Alert Triage{% endblock %}
+{% block page_id %}alerts{% endblock %}
+
+{% block content %}
+<!-- BEGIN: TopMetricsAndContextBar -->
+<section class="space-y-4" data-purpose="metrics-summary">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="space-y-1">
+            <div class="flex items-center gap-3">
+                <h1 class="text-xl font-bold tracking-tight text-white font-sans">Telemetry Alert Triage</h1>
+                <span id="pendingBadge" class="px-2.5 py-0.5 text-xs font-medium rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                    Loading alerts...
+                </span>
+            </div>
+            <p class="text-xs text-slate-400 font-mono">Continuous surveillance • Hybrid ML Edge Classifier & Real-Time Vital Boundary Checks</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <div class="relative">
+                <input id="alertSearch" class="w-64 bg-slate-900 text-slate-200 placeholder-slate-500 text-xs rounded-lg border border-slate-700 pl-8 pr-3 py-2 focus:border-cyan-500 focus:outline-none transition" placeholder="Search patient, bed, or condition..." type="text">
+                <svg class="w-4 h-4 text-slate-400 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                </svg>
+            </div>
+
+            <select id="filterSeverity" class="bg-slate-900 border border-slate-700 text-slate-200 rounded-lg py-2 pl-3 pr-8 text-xs focus:ring-cyan-500 focus:border-cyan-500 outline-none cursor-pointer">
+                <option value="all">All Severities</option>
+                <option value="critical">Critical Only</option>
+                <option value="warning">Warnings Only</option>
+            </select>
+
+            <button id="ackAllBtn" class="px-3.5 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-semibold text-xs transition shadow-sm" type="button">
+                Acknowledge All
+            </button>
+        </div>
+    </div>
+
+    <!-- 3 Summary Triage Metrics -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div class="bg-rose-950/20 p-4 rounded-xl border border-rose-500/40 flex items-center justify-between">
+            <div class="space-y-1">
+                <span class="text-xs font-medium text-rose-300 uppercase tracking-wider">Active Critical</span>
+                <div class="flex items-baseline gap-2">
+                    <span id="statActiveCritical" class="text-3xl font-bold font-mono text-white">0</span>
+                    <span class="text-xs text-rose-400">Requires immediate action</span>
+                </div>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path clip-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" fill-rule="evenodd"></path>
+                </svg>
+            </div>
+        </div>
+
+        <div class="bg-slate-900/60 p-4 rounded-xl border border-amber-500/30 flex items-center justify-between">
+            <div class="space-y-1">
+                <span class="text-xs font-medium text-amber-300 uppercase tracking-wider">Warnings</span>
+                <div class="flex items-baseline gap-2">
+                    <span id="statWarnings" class="text-3xl font-bold font-mono text-white">0</span>
+                    <span class="text-xs text-amber-400">Elevated threshold drift</span>
+                </div>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                </svg>
+            </div>
+        </div>
+
+        <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 flex items-center justify-between">
+            <div class="space-y-1">
+                <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Resolved Today</span>
+                <div class="flex items-baseline gap-2">
+                    <span id="statResolved" class="text-3xl font-bold font-mono text-white">0</span>
+                    <span class="text-xs text-emerald-400">Avg response &lt; 40s</span>
+                </div>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-slate-800 text-emerald-400 flex items-center justify-center">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                </svg>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- END: TopMetricsAndContextBar -->
+
+<!-- BEGIN: MasterDetailTelemetryWorkspace -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start" data-purpose="master-detail-workspace">
+    <!-- ========================================== -->
+    <!-- LEFT COLUMN: Real-Time Alert Triage Queue -->
+    <!-- ========================================== -->
+    <div class="lg:col-span-5 xl:col-span-6 space-y-3" data-purpose="alert-triage-list">
+        <div class="flex items-center justify-between px-1">
+            <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300 font-mono">
+                Active Alerts (<span id="activeAlertCount">0</span>)
+            </h2>
+            <span class="text-xs text-slate-400 font-mono">Sorted by urgency</span>
+        </div>
+
+        <div class="space-y-3 overflow-y-auto max-h-[820px] pr-1" id="alert-queue-container">
+            <div class="p-8 text-center text-slate-400 font-mono text-xs bg-slate-900/40 rounded-xl border border-slate-800">
+                Loading clinical alert queue...
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- RIGHT COLUMN: Detailed Alert Telemetry & CDS Inspector -->
+    <!-- ======================================================== -->
+    <div class="lg:col-span-7 xl:col-span-6 space-y-4" data-purpose="alert-deep-dive-inspector" id="alert-inspector-panel">
+        <div class="bg-slate-900/80 rounded-xl border border-slate-800 p-5 space-y-5 shadow-lg">
+            <!-- Header Strip -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-800 gap-3">
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <span id="inspBadge" class="px-2 py-0.5 rounded text-xs font-mono font-bold bg-rose-500 text-white">
+                            CRITICAL ALERT
+                        </span>
+                        <span id="inspTriggerTime" class="text-xs font-mono text-slate-400">
+                            Triggered just now
+                        </span>
+                    </div>
+                    <h2 id="inspPatientName" class="text-xl font-bold text-white mt-1.5 font-sans">
+                        Patient Telemetry Inspector
+                    </h2>
+                    <p id="inspPatientSub" class="text-xs text-slate-400">
+                        Select an alert from the queue to view full diagnostic strip
+                    </p>
+                </div>
+
+                <button id="rapidResponseBtn" class="px-3.5 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold tracking-wider uppercase flex items-center gap-2 shadow-md transition self-start sm:self-auto" type="button">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"></path>
+                    </svg>
+                    Trigger Rapid Response
+                </button>
+            </div>
+
+            <!-- 4 Core Vitals Snapshots at Alarm Time -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div id="inspCardHR" class="bg-slate-950 p-3 rounded-lg border border-slate-800 space-y-1">
+                    <span class="text-[11px] text-slate-400 font-medium">Heart Rate</span>
+                    <div class="flex items-baseline gap-1">
+                        <span id="inspValHR" class="text-2xl font-bold font-mono text-white">--</span>
+                        <span class="text-xs text-slate-400">bpm</span>
+                    </div>
+                    <span id="inspNoteHR" class="text-[10px] text-slate-400 font-medium block">Awaiting selection</span>
+                </div>
+
+                <div id="inspCardSpO2" class="bg-slate-950 p-3 rounded-lg border border-slate-800 space-y-1">
+                    <span class="text-[11px] text-slate-400 font-medium">SpO2 Saturation</span>
+                    <div class="flex items-baseline gap-1">
+                        <span id="inspValSpO2" class="text-2xl font-bold font-mono text-cyan-400">--</span>
+                        <span class="text-xs text-slate-400">%</span>
+                    </div>
+                    <span id="inspNoteSpO2" class="text-[10px] text-slate-400 font-medium block">Awaiting selection</span>
+                </div>
+
+                <div id="inspCardBP" class="bg-slate-950 p-3 rounded-lg border border-slate-800 space-y-1">
+                    <span class="text-[11px] text-slate-400 font-medium">Blood Pressure</span>
+                    <div class="flex items-baseline gap-1">
+                        <span id="inspValBP" class="text-2xl font-bold font-mono text-slate-200">--/--</span>
+                        <span class="text-xs text-slate-400">mmHg</span>
+                    </div>
+                    <span id="inspNoteMAP" class="text-[10px] text-slate-400 font-medium block">MAP: -- mmHg</span>
+                </div>
+
+                <div id="inspCardTemp" class="bg-slate-950 p-3 rounded-lg border border-slate-800 space-y-1">
+                    <span class="text-[11px] text-slate-400 font-medium">Core Temp</span>
+                    <div class="flex items-baseline gap-1">
+                        <span id="inspValTemp" class="text-2xl font-bold font-mono text-slate-200">--</span>
+                        <span class="text-xs text-slate-400">°C</span>
+                    </div>
+                    <span id="inspNoteTemp" class="text-[10px] text-slate-400 font-medium block">Awaiting selection</span>
+                </div>
+            </div>
+
+            <!-- Recommended Clinical Protocol / CDS Box -->
+            <div class="bg-slate-950 rounded-lg p-3.5 border border-slate-800 space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-slate-200 flex items-center gap-1.5 font-sans">
+                        <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                        </svg>
+                        Recommended Clinical Protocol
+                    </span>
+                    <span class="text-[11px] text-slate-400 font-mono">ACLS Guidelines</span>
+                </div>
+                <ul id="inspProtocols" class="text-xs text-slate-300 space-y-1.5 pl-5 list-disc font-sans">
+                    <li class="leading-relaxed"><strong class="text-white">Immediate Oxygen:</strong> Deliver high-flow oxygen via non-rebreather mask (target SpO2 &gt; 92%).</li>
+                    <li class="leading-relaxed"><strong class="text-white">Diagnostic STAT:</strong> Perform urgent 12-lead ECG STAT and draw serum electrolytes.</li>
+                    <li class="leading-relaxed"><strong class="text-white">Medication Prep:</strong> Ready Amiodarone infusion if ventricular runs recur.</li>
+                </ul>
+            </div>
+
+            <!-- SDN Priority QoS Telemetry Strip -->
+            <div id="inspNetworkStrip" class="flex items-center justify-between text-xs text-slate-400 bg-slate-950 px-3 py-2 rounded-lg border border-slate-800">
+                <div class="flex items-center gap-2">
+                    <span id="inspNetworkDot" class="w-2 h-2 rounded-full bg-emerald-400 status-ping"></span>
+                    <span id="inspNetworkText" class="text-slate-300 font-mono text-[11px]">Network: Prioritized QoS Active • Sub-ms Latency</span>
+                </div>
+                <span id="inspNetworkQueue" class="text-[11px] text-slate-500 font-mono">Switch SW-ICU-02 • Queue 1 (HTB 10Mbps)</span>
+            </div>
+
+            <!-- Action Buttons Footer -->
+            <div class="pt-3 border-t border-slate-800 flex items-center justify-end">
+                <button id="inspAckBtn" class="px-5 py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-slate-950 text-xs font-bold transition flex items-center gap-1.5 shadow-sm" type="button">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                    </svg>
+                    <span id="inspAckBtnText">Acknowledge Alert</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- END: Right Column Inspector -->
+</section>
+<!-- END: MasterDetailTelemetryWorkspace -->
+{% endblock %}

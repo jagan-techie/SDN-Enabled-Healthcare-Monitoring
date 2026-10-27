@@ -1,0 +1,22 @@
+{
+  "source": "SyntheticPhysiologicalGenerator (McSharry ECG + AAMI Annotation)",
+  "sampling_rate_hz": 360,
+  "is_synthetic": true,
+  "train_records": [
+    "synth_101",
+    "synth_102",
+    "synth_103",
+    "synth_104",
+    "synth_105",
+    "synth_106",
+    "synth_107",
+    "synth_108"
+  ],
+  "test_records": [
+    "synth_201",
+    "synth_202",
+    "synth_203",
+    "synth_204",
+    "synth_205"
+  ]
+}

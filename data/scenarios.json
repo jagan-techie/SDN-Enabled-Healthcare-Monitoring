@@ -1,0 +1,134 @@
+{
+  "description": "Multi-patient physiological timeline scenarios with ground-truth labels for closed-loop evaluation",
+  "patients": [
+    {
+      "patient_id": "P101",
+      "name": "Sarah Connor",
+      "age": 42,
+      "gender": "F",
+      "room": "Ward-302",
+      "ip_address": "10.0.0.1",
+      "timeline": [
+        {
+          "start_sec": 0,
+          "end_sec": 15,
+          "hr": 72.0,
+          "spo2": 98.0,
+          "temp": 36.8,
+          "pvc": false,
+          "leads_off": false,
+          "ground_truth": "NORMAL",
+          "is_anomalous": false
+        },
+        {
+          "start_sec": 15,
+          "end_sec": 35,
+          "hr": 136.0,
+          "spo2": 95.0,
+          "temp": 39.2,
+          "pvc": false,
+          "leads_off": false,
+          "ground_truth": "TACHYCARDIA_FEVER",
+          "is_anomalous": true
+        },
+        {
+          "start_sec": 35,
+          "end_sec": 55,
+          "hr": 74.0,
+          "spo2": 98.0,
+          "temp": 37.0,
+          "pvc": false,
+          "leads_off": false,
+          "ground_truth": "NORMAL",
+          "is_anomalous": false
+        }
+      ]
+    },
+    {
+      "patient_id": "P102",
+      "name": "John Doe",
+      "age": 68,
+      "gender": "M",
+      "room": "ICU-Bed-04",
+      "ip_address": "10.0.0.2",
+      "timeline": [
+        {
+          "start_sec": 0,
+          "end_sec": 20,
+          "hr": 68.0,
+          "spo2": 97.5,
+          "temp": 36.6,
+          "pvc": false,
+          "leads_off": false,
+          "ground_truth": "NORMAL",
+          "is_anomalous": false
+        },
+        {
+          "start_sec": 20,
+          "end_sec": 40,
+          "hr": 108.0,
+          "spo2": 84.0,
+          "temp": 36.9,
+          "pvc": false,
+          "leads_off": false,
+          "ground_truth": "HYPOXEMIA",
+          "is_anomalous": true
+        },
+        {
+          "start_sec": 40,
+          "end_sec": 55,
+          "hr": 71.0,
+          "spo2": 98.0,
+          "temp": 36.7,
+          "pvc": false,
+          "leads_off": false,
+          "ground_truth": "NORMAL",
+          "is_anomalous": false
+        }
+      ]
+    },
+    {
+      "patient_id": "P103",
+      "name": "Elena Rostova",
+      "age": 55,
+      "gender": "F",
+      "room": "Cardio-108",
+      "ip_address": "10.0.0.3",
+      "timeline": [
+        {
+          "start_sec": 0,
+          "end_sec": 12,
+          "hr": 76.0,
+          "spo2": 98.0,
+          "temp": 36.7,
+          "pvc": false,
+          "leads_off": false,
+          "ground_truth": "NORMAL",
+          "is_anomalous": false
+        },
+        {
+          "start_sec": 12,
+          "end_sec": 32,
+          "hr": 92.0,
+          "spo2": 95.0,
+          "temp": 36.8,
+          "pvc": true,
+          "leads_off": false,
+          "ground_truth": "ARRHYTHMIA_PVC",
+          "is_anomalous": true
+        },
+        {
+          "start_sec": 32,
+          "end_sec": 55,
+          "hr": 75.0,
+          "spo2": 98.0,
+          "temp": 36.8,
+          "pvc": false,
+          "leads_off": false,
+          "ground_truth": "NORMAL",
+          "is_anomalous": false
+        }
+      ]
+    }
+  ]
+}

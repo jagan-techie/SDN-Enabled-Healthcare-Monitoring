@@ -1,0 +1,169 @@
+/* dashboard/static/css/style.css - Clinical Telemetry & Patient Monitoring Workstation Theme */
+:root {
+  --bg-clinical-950: #060B17;
+  --bg-clinical-900: #0B132B;
+  --bg-clinical-850: #0F1A36;
+  --bg-clinical-800: #142247;
+  --border-clinical: rgba(56, 189, 248, 0.12);
+  --border-active: rgba(56, 189, 248, 0.4);
+  --ecg-green: #10B981;
+  --ecg-glow: #34D399;
+  --ecg-amber: #F59E0B;
+  --ecg-cyan: #06B6D4;
+  --ecg-red: #EF4444;
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.03);
+}
+
+/* High-fidelity ECG medical millimeter grid */
+.medical-grid-dark {
+  background-color: #050b14;
+  background-image: 
+    linear-gradient(rgba(14, 165, 233, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(14, 165, 233, 0.07) 1px, transparent 1px),
+    linear-gradient(rgba(14, 165, 233, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(14, 165, 233, 0.025) 1px, transparent 1px);
+  background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
+}
+
+/* Grid pattern resembling telemetry calibrated paper */
+.bg-ecg-grid {
+  background-image: 
+    linear-gradient(to right, rgba(31, 46, 82, 0.4) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(31, 46, 82, 0.4) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.bg-ecg-grid-dense {
+  background-image: 
+    linear-gradient(to right, rgba(34, 211, 238, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(34, 211, 238, 0.08) 1px, transparent 1px);
+  background-size: 8px 8px;
+}
+
+.glow-ecg {
+  filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.55));
+}
+
+.glow-cyan {
+  filter: drop-shadow(0 0 6px rgba(6, 182, 212, 0.5));
+}
+
+/* Glassmorphism for medical panels */
+.clinical-panel {
+  background: linear-gradient(180deg, rgba(15, 26, 54, 0.85) 0%, rgba(11, 19, 43, 0.95) 100%);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(56, 189, 248, 0.12);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.03);
+}
+
+.clinical-panel-highlight {
+  background: linear-gradient(180deg, rgba(20, 34, 71, 0.9) 0%, rgba(15, 26, 54, 0.95) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(16, 185, 129, 0.1);
+}
+
+@keyframes subtlePulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.15); opacity: 0.8; }
+}
+
+.animate-heart-pulse {
+  animation: subtlePulse 0.85s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  transform-origin: center;
+}
+
+.status-ping {
+  position: relative;
+}
+
+.status-ping::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0.4;
+  animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+/* Glowing priority banner */
+.priority-banner-glowing {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(59, 130, 246, 0.25) 100%);
+  border: 1px solid rgba(168, 85, 247, 0.6);
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.35);
+  animation: pulsePriority 2s infinite ease-in-out;
+}
+
+@keyframes pulsePriority {
+  0%, 100% { box-shadow: 0 0 15px rgba(168, 85, 247, 0.3); }
+  50% { box-shadow: 0 0 25px rgba(168, 85, 247, 0.7); }
+}
+
+/* Base resets & typography */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #070B12;
+  color: #F8FAFC;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Table styling for clinical alerts and flow events */
+.clinical-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: left;
+  font-size: 0.85rem;
+}
+
+.clinical-table th {
+  background: rgba(15, 26, 54, 0.95);
+  color: #94A3B8;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(56, 189, 248, 0.15);
+}
+
+.clinical-table td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid rgba(56, 189, 248, 0.08);
+  color: #E2E8F0;
+}
+
+.clinical-table tr:hover td {
+  background: rgba(56, 189, 248, 0.03);
+}
+
+/* Form inputs */
+.clinical-input {
+  background-color: #060B17;
+  border: 1px solid rgba(56, 189, 248, 0.18);
+  color: #F8FAFC;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.clinical-input:focus {
+  border-color: #06B6D4;
+  box-shadow: 0 0 0 1px #06B6D4;
+}

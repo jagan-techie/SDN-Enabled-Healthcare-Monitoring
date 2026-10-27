@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+<!-- dashboard/templates/admin.html - Administrator panel for patients and dynamic thresholds -->
+{% block title %}Clinical Administration — CardioSDN Guard{% endblock %}
+{% block page_id %}admin{% endblock %}
+
+{% block content %}
+<div class="clinical-panel p-4 rounded-xl flex items-center justify-between mb-5">
+    <div>
+        <h2 class="text-base font-bold text-white flex items-center gap-2">
+            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+            Clinical Administration & Threshold Configuration
+        </h2>
+        <p class="text-xs text-slate-400 mt-0.5">Manage registered patients, WBAN hardware mappings, and dynamic alarm boundaries.</p>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+    <!-- Registered Patients Card -->
+    <div class="clinical-panel rounded-xl overflow-hidden">
+        <div class="p-3.5 bg-clinical-900 border-b border-clinical-border font-bold text-xs uppercase tracking-wider text-slate-300">
+            Registered WBAN Patient Nodes
+        </div>
+        <div class="overflow-x-auto">
+            <table class="clinical-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Ward/Room</th>
+                        <th>WBAN IP</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in patients %}
+                    <tr>
+                        <td><strong class="text-cyan-400">{{ p.patient_id }}</strong></td>
+                        <td>{{ p.name }}</td>
+                        <td>{{ p.room }}</td>
+                        <td><code class="text-xs text-slate-300 bg-clinical-950 px-1.5 py-0.5 rounded border border-clinical-border">{{ p.ip_address }}</code></td>
+                        <td>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold {% if p.status == 'CRITICAL' %}bg-rose-950 text-rose-300 border border-rose-800{% elif p.status == 'WARNING' %}bg-amber-950 text-amber-300 border border-amber-800{% else %}bg-emerald-950 text-emerald-300 border border-emerald-800{% endif %}">
+                                {{ p.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Clinical Threshold Settings Card -->
+    <div class="clinical-panel rounded-xl p-4">
+        <div class="font-bold text-xs uppercase tracking-wider text-slate-300 pb-2.5 mb-3 border-b border-clinical-border">
+            Dynamic Alarm Threshold Limits
+        </div>
+        <form id="thresholdForm" class="space-y-4">
+            <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Bradycardia Threshold (Minimum Heart Rate):</label>
+                <div class="flex items-center gap-2">
+                    <input type="number" id="hrMin" class="clinical-input w-full" value="{{ thresholds.hr_min }}">
+                    <span class="text-xs font-mono text-slate-400">bpm</span>
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Tachycardia Threshold (Maximum Heart Rate):</label>
+                <div class="flex items-center gap-2">
+                    <input type="number" id="hrMax" class="clinical-input w-full" value="{{ thresholds.hr_max }}">
+                    <span class="text-xs font-mono text-slate-400">bpm</span>
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Hypoxemia Alert Level (Minimum SpO2):</label>
+                <div class="flex items-center gap-2">
+                    <input type="number" id="spo2Min" class="clinical-input w-full" value="{{ thresholds.spo2_min }}" step="0.5">
+                    <span class="text-xs font-mono text-slate-400">%</span>
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Fever Warning Level (Maximum Body Temp):</label>
+                <div class="flex items-center gap-2">
+                    <input type="number" id="tempMax" class="clinical-input w-full" value="{{ thresholds.temp_max }}" step="0.1">
+                    <span class="text-xs font-mono text-slate-400">°C</span>
+                </div>
+            </div>
+            <button type="submit" class="w-full py-2 px-4 rounded-lg bg-cyan-600 hover:bg-cyan-500 font-semibold text-xs text-white shadow-md transition">
+                Save & Propagate Clinical Thresholds
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{
+  "model_type": "RandomForestClassifier",
+  "n_estimators": 100,
+  "max_depth": 10,
+  "class_weight": "balanced",
+  "feature_names": [
+    "mean_rr",
+    "std_rr",
+    "rmssd",
+    "estimated_hr",
+    "pnn50",
+    "qrs_amplitude",
+    "qrs_energy",
+    "signal_skewness",
+    "signal_kurtosis"
+  ],
+  "num_features": 9,
+  "train_patients": [
+    "synth_101",
+    "synth_102",
+    "synth_103",
+    "synth_104",
+    "synth_105",
+    "synth_106",
+    "synth_107",
+    "synth_108"
+  ],
+  "test_patients": [
+    "synth_201",
+    "synth_202",
+    "synth_203",
+    "synth_204",
+    "synth_205"
+  ],
+  "train_samples": 480,
+  "test_samples": 300,
+  "training_time_sec": 0.209,
+  "classes": [
+    "NORMAL",
+    "ARRHYTHMIA"
+  ]
+}

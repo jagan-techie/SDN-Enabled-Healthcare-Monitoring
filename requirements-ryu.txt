@@ -1,0 +1,10 @@
+# Dedicated requirements for Ryu SDN Controller (Requires Python 3.9)
+# Note: Ryu relies on eventlet and greenlet which require strict version pinning on newer systems.
+ryu==4.34
+eventlet==0.30.2
+greenlet==1.1.2
+requests>=2.28.0
+python-dotenv>=1.0.0
+pytest>=7.0.0
+webob>=1.8.7
+routes>=2.5.1
