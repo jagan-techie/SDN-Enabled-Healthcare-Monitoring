@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Intelligent Healthcare Monitoring using SDN, IoT, and Machine Learning
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
@@ -148,3 +149,7 @@ Open your browser to:
 - [Clinical & ML Limitations Disclosure](docs/ML_LIMITATIONS.md)
 - [WSL2 Ubuntu Mininet Setup Guide](docs/WSL2_SETUP.md)
 - [Troubleshooting & Diagnostics](docs/TROUBLESHOOTING.md)
+=======
+# SDN-Enabled-Healthcare-Monitoring
+SDN-enabled healthcare monitoring system integrating IoT/WBAN, Software-Defined Networking, and Machine Learning for real-time patient monitoring, medical traffic prioritization, and disease diagnosis.
+>>>>>>> origin/main
